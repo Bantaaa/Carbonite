@@ -5,31 +5,21 @@ public class User {
     private String id;
     private String name;
     private int age;
-    private static final List<User> users = new ArrayList<>();
+    private final List<Consumption> consumptions;
 
     public User(String name, int age, String id) {
         this.name = name;
         this.age = age;
         this.id = id;
+        this.consumptions = new ArrayList<>();
     }
 
-    public User() {
+    public String getId() {
+        return id;
     }
 
-    public static void createUser(String name, int age, String id) {
-        users.add(new User(name, age, id));
-    }
-
-    public static User getUser(String id) {
-        int index = 0;
-        while (index < users.size()) {
-            User user = users.get(index);
-            if (user.getId().equals(id)) {
-                return user;
-            }
-            index++;
-        }
-        return null;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -48,15 +38,11 @@ public class User {
         this.age = age;
     }
 
-    public String getId() {
-        return id;
+    public void addConsumption(Consumption consumption) {
+        consumptions.add(consumption);
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public static void addUser(User user) {
-        users.add(user);
+    public List<Consumption> getConsumptions() {
+        return consumptions;
     }
 }

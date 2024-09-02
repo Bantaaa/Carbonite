@@ -5,8 +5,11 @@ import java.time.format.DateTimeParseException;
 import java.util.InputMismatchException;
 
 public class Main {
+
     private static final Scanner scanner = new Scanner(System.in);
     private static final UserHandle userHandle = new UserHandle();
+    private static final ConsumptionHandle consumptionHandle = new ConsumptionHandle(userHandle);
+
 
     public static void main(String[] args) {
         while (true) {
@@ -21,16 +24,16 @@ public class Main {
                     modifyUser();
                     break;
                 case 3:
-//                    showCarbonConsumption();
+                    showCarbonConsumption();
                     break;
                 case 4:
-//                    addConsumption();
+                    addConsumption();
                     break;
                 case 5:
                     deleteUser();
                     break;
                 case 6:
-//                    showStats();
+                    showStats();
                     break;
                 case 7:
                     displayUserCard();
@@ -80,7 +83,7 @@ public class Main {
     }
 
     private static void addNewUser() {
-        scanner.nextLine(); // Consume newline
+        scanner.nextLine();
         System.out.print("Enter name: ");
         String name = scanner.nextLine();
         int age = getValidAge();
@@ -94,7 +97,7 @@ public class Main {
     }
 
     private static void modifyUser() {
-        scanner.nextLine(); // Consume newline
+        scanner.nextLine();
         System.out.print("Enter user ID: ");
         String id = scanner.nextLine();
         if (userHandle.userExists(id)) {
@@ -112,49 +115,13 @@ public class Main {
         }
     }
 
-//    private static void showCarbonConsumption() {
-//        scanner.nextLine(); // Consume newline
-//        System.out.print("Enter user ID: ");
-//        String id = scanner.nextLine();
-//        userHandle.displayUserConsumption(id);
-//    }
-
-    private static void addConsumption() {
-        scanner.nextLine(); // Consume newline
-        System.out.print("Enter user ID: ");
-        String id = scanner.nextLine();
-        if (userHandle.userExists(id)) {
-            try {
-                System.out.print("Enter consumption amount (in kg CO2): ");
-                double amount = scanner.nextDouble();
-                scanner.nextLine();
-
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-                System.out.print("Enter start date (YYYY-MM-DD): ");
-                String startDateStr = scanner.nextLine();
-                LocalDate startDate = LocalDate.parse(startDateStr, formatter);
-
-                System.out.print("Enter end date (YYYY-MM-DD): ");
-                String endDateStr = scanner.nextLine();
-                LocalDate endDate = LocalDate.parse(endDateStr, formatter);
-                Consumption.add()
-                if (Consumption.Consumption(id, startDate, endDate, amount)) {
-                    System.out.println("Consumption added successfully.");
-                } else {
-                    System.out.println("Failed to add consumption. Please try again.");
-                }
-            } catch (InputMismatchException e) {
-                System.out.println("Invalid input for consumption amount. Please enter a number.");
-                scanner.nextLine(); // Clear invalid input
-            } catch (DateTimeParseException e) {
-                System.out.println("Invalid date format. Please use YYYY-MM-DD.");
-            }
-        } else {
-            System.out.println("User not found.");
-        }
+    private static void showCarbonConsumption() {
+        consumptionHandle.displayUserConsumptions();
     }
 
+    private static void addConsumption() {
+        consumptionHandle.manageConsumption();
+    }
     private static void deleteUser() {
         scanner.nextLine();
         System.out.print("Enter user ID: ");
@@ -166,9 +133,9 @@ public class Main {
         }
     }
 
-//    private static void showStats() {
-//        UserHandle.displayStats();
-//    }
+    private static void showStats() {
+        userHandle.displayStats();
+    }
 
     private static void displayUserCard() {
         scanner.nextLine(); // Consume newline
@@ -195,7 +162,7 @@ public class Main {
     }
 
     private static String getUniqueUserId() {
-        scanner.nextLine(); // Consume newline
+        scanner.nextLine();
         String id;
         do {
             System.out.print("Enter user ID: ");
