@@ -1,4 +1,7 @@
 import java.util.Scanner;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.InputMismatchException;
 
 public class Main {
@@ -116,30 +119,44 @@ public class Main {
 //        userHandle.displayUserConsumption(id);
 //    }
 
-//    private static void addConsumption() {
-//        scanner.nextLine(); // Consume newline
-//        System.out.print("Enter user ID: ");
-//        String id = scanner.nextLine();
-//        if (userHandle.userExists(id)) {
-//            System.out.print("Enter consumption amount (in kg CO2): ");
-//            try {
-//                double amount = scanner.nextDouble();
-//                if (userHandle.addConsumption(id, amount)) {
-//                    System.out.println("Consumption added successfully.");
-//                } else {
-//                    System.out.println("Failed to add consumption. Please try again.");
-//                }
-//            } catch (InputMismatchException e) {
-//                System.out.println("Invalid input. Please enter a number.");
-//                scanner.nextLine(); // Clear the invalid input
-//            }
-//        } else {
-//            System.out.println("User not found.");
-//        }
-//    }
+    private static void addConsumption() {
+        scanner.nextLine(); // Consume newline
+        System.out.print("Enter user ID: ");
+        String id = scanner.nextLine();
+        if (userHandle.userExists(id)) {
+            try {
+                System.out.print("Enter consumption amount (in kg CO2): ");
+                double amount = scanner.nextDouble();
+                scanner.nextLine();
+
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+                System.out.print("Enter start date (YYYY-MM-DD): ");
+                String startDateStr = scanner.nextLine();
+                LocalDate startDate = LocalDate.parse(startDateStr, formatter);
+
+                System.out.print("Enter end date (YYYY-MM-DD): ");
+                String endDateStr = scanner.nextLine();
+                LocalDate endDate = LocalDate.parse(endDateStr, formatter);
+                Consumption.add()
+                if (Consumption.Consumption(id, startDate, endDate, amount)) {
+                    System.out.println("Consumption added successfully.");
+                } else {
+                    System.out.println("Failed to add consumption. Please try again.");
+                }
+            } catch (InputMismatchException e) {
+                System.out.println("Invalid input for consumption amount. Please enter a number.");
+                scanner.nextLine(); // Clear invalid input
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+            }
+        } else {
+            System.out.println("User not found.");
+        }
+    }
 
     private static void deleteUser() {
-        scanner.nextLine(); // Consume newline
+        scanner.nextLine();
         System.out.print("Enter user ID: ");
         String id = scanner.nextLine();
         if (userHandle.deleteUser(id)) {
@@ -172,7 +189,7 @@ public class Main {
                 }
             } catch (InputMismatchException e) {
                 System.out.println("Invalid input. Please enter a number.");
-                scanner.nextLine(); // Clear the invalid input
+                scanner.nextLine(); // Clear input
             }
         }
     }

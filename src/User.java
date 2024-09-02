@@ -21,10 +21,13 @@ public class User {
     }
 
     public static User getUser(String id) {
-        for (User user : users) {
+        int index = 0;
+        while (index < users.size()) {
+            User user = users.get(index);
             if (user.getId().equals(id)) {
                 return user;
             }
+            index++;
         }
         return null;
     }
