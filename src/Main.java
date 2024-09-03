@@ -38,6 +38,9 @@ public class Main {
                 case 7:
                     displayUserCard();
                     break;
+                case 8:
+                    generateReport();
+                    break;
                 case 0:
                     System.out.println("Exiting the program. Goodbye!");
                     scanner.close();
@@ -66,6 +69,9 @@ public class Main {
         System.out.println("      5. Delete a user");
         System.out.println("      6. Show stats");
         System.out.println("      7. Display user card");
+        System.out.println("      0. Exit");
+        System.out.println("      7. Display user card");
+        System.out.println("      8. Generate consumption report");
         System.out.println("      0. Exit");
         System.out.println("===================================================================");
     }
@@ -122,6 +128,7 @@ public class Main {
     private static void addConsumption() {
         consumptionHandle.manageConsumption();
     }
+
     private static void deleteUser() {
         scanner.nextLine();
         System.out.print("Enter user ID: ");
@@ -172,5 +179,9 @@ public class Main {
             }
         } while (userHandle.userExists(id));
         return id;
+    }
+
+    private static void generateReport() {
+        consumptionHandle.generateReport();
     }
 }
