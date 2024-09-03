@@ -8,6 +8,7 @@ public class ConsumptionHandle {
     private final List<Consumption> consumptions;
     private final UserHandle userHandle;
     private final Scanner scanner;
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public ConsumptionHandle(UserHandle userHandle) {
         this.consumptions = new ArrayList<>();
@@ -16,7 +17,6 @@ public class ConsumptionHandle {
     }
 
     public void manageConsumption() {
-
         System.out.print("Enter the ID of the user you want to add a consumption to: ");
         String id = scanner.nextLine();
         User user = userHandle.getUser(id);
@@ -26,21 +26,19 @@ public class ConsumptionHandle {
             return;
         }
 
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
         System.out.print("Enter the value of carbon consumption in carbona: ");
         float carbonConsumption = scanner.nextFloat();
         scanner.nextLine(); // Consume newline
 
-        System.out.print("Enter the start date (dd/MM/yyyy): ");
-        String startDate = scanner.nextLine();
-        LocalDate startDateFormatted = LocalDate.parse(startDate, dateTimeFormatter);
+        LocalDate startDate = getDateInput("Enter the start date (dd/MM/yyyy): ");
+        LocalDate endDate = getDateInput("Enter the end date (dd/MM/yyyy): ");
 
-        System.out.print("Enter the end date (dd/MM/yyyy): ");
-        String endDate = scanner.nextLine();
-        LocalDate endDateFormatted = LocalDate.parse(endDate, dateTimeFormatter);
+        if (startDate.isAfter(endDate)) {
+            System.out.println("Start date cannot be after end date. Please try again.");
+            return;
+        }
 
-        Consumption consumption = new Consumption(startDateFormatted, endDateFormatted, carbonConsumption, user);
+        Consumption consumption = new Consumption(startDate, endDate, carbonConsumption, user);
         consumptions.add(consumption);
         user.addConsumption(consumption);
 
@@ -71,61 +69,60 @@ public class ConsumptionHandle {
             return;
         }
 
-        List<Consumption> userConsumptions = user.getConsumptions();
-        if (userConsumptions.isEmpty()) {
-            System.out.println("No consumptions found for user with ID: " + id);
+        LocalDate startDate = getDateInput("Enter the start date of the period (dd/MM/yyyy): ");
+        LocalDate endDate = getDateInput("Enter the end date of the period (dd/MM/yyyy): ");
+
+        if (startDate.isAfter(endDate)) {
+            System.out.println("Start date cannot be after end date. Please try again.");
             return;
         }
 
-        Map<LocalDate, Double> dailyConsumption = new TreeMap<>();
-        LocalDate earliestDate = LocalDate.MAX;
-        LocalDate latestDate = LocalDate.MIN;
-
-        for (Consumption consumption : userConsumptions) {
-            LocalDate startDate = consumption.getStartDate();
-            LocalDate endDate = consumption.getEndDate();
-            long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
-            double dailyValue = consumption.getCarbon() / days;
-
-            for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-                dailyConsumption.merge(date, dailyValue, Double::sum);
-            }
-
-            if (startDate.isBefore(earliestDate)) earliestDate = startDate;
-            if (endDate.isAfter(latestDate)) latestDate = endDate;
-        }
+        List<Consumption> userConsumptions = user.getConsumptions();
+        double totalConsumption = calculateTotalConsumption(userConsumptions, startDate, endDate);
 
         System.out.println("\nReport for user: " + user.getName());
-        System.out.println("Period: " + earliestDate + " to " + latestDate);
+        System.out.println("Period: " + startDate.format(dateFormatter) + " to " + endDate.format(dateFormatter));
+        System.out.printf("Total consumption for the period: %.2f carbona\n", totalConsumption);
 
-        // Daily report
-        System.out.println("\nDaily Consumption:");
-        for (Map.Entry<LocalDate, Double> entry : dailyConsumption.entrySet()) {
-            System.out.printf("%s: %.2f carbona\n", entry.getKey(), entry.getValue());
-        }
+        long totalDays = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        double dailyAverage = totalConsumption / totalDays;
+        System.out.printf("Daily average consumption: %.2f carbona\n", dailyAverage);
 
-        // Weekly report
-        System.out.println("\nWeekly Consumption:");
-        Map<String, Double> weeklyConsumption = new TreeMap<>();
-        WeekFields weekFields = WeekFields.of(Locale.getDefault());
-        for (Map.Entry<LocalDate, Double> entry : dailyConsumption.entrySet()) {
-            LocalDate date = entry.getKey();
-            String weekKey = date.getYear() + "-W" + date.get(weekFields.weekOfWeekBasedYear());
-            weeklyConsumption.merge(weekKey, entry.getValue(), Double::sum);
-        }
-        for (Map.Entry<String, Double> entry : weeklyConsumption.entrySet()) {
-            System.out.printf("%s: %.2f carbona\n", entry.getKey(), entry.getValue());
-        }
+        double weeklyAverage = dailyAverage * 7;
+        System.out.printf("Weekly average consumption: %.2f carbona\n", weeklyAverage);
 
-        // Monthly report
-        System.out.println("\nMonthly Consumption:");
-        Map<String, Double> monthlyConsumption = new TreeMap<>();
-        for (Map.Entry<LocalDate, Double> entry : dailyConsumption.entrySet()) {
-            String monthYear = entry.getKey().getYear() + "-" + String.format("%02d", entry.getKey().getMonthValue());
-            monthlyConsumption.merge(monthYear, entry.getValue(), Double::sum);
+        double monthlyAverage = dailyAverage * 30; // Assuming a 30-day month for simplicity
+        System.out.printf("Monthly average consumption: %.2f carbona\n", monthlyAverage);
+    }
+
+    private double calculateTotalConsumption(List<Consumption> consumptions, LocalDate startDate, LocalDate endDate) {
+        double totalConsumption = 0;
+        for (Consumption consumption : consumptions) {
+            if (consumption.getStartDate().isAfter(endDate) || consumption.getEndDate().isBefore(startDate)) {
+                continue; // Skip consumptions outside the requested period
+            }
+
+            LocalDate overlapStart = consumption.getStartDate().isAfter(startDate) ? consumption.getStartDate() : startDate;
+            LocalDate overlapEnd = consumption.getEndDate().isBefore(endDate) ? consumption.getEndDate() : endDate;
+
+            long overlapDays = ChronoUnit.DAYS.between(overlapStart, overlapEnd) + 1;
+            long totalConsumptionDays = ChronoUnit.DAYS.between(consumption.getStartDate(), consumption.getEndDate()) + 1;
+
+            double consumptionInPeriod = (consumption.getCarbon() * overlapDays) / totalConsumptionDays;
+            totalConsumption += consumptionInPeriod;
         }
-        for (Map.Entry<String, Double> entry : monthlyConsumption.entrySet()) {
-            System.out.printf("%s: %.2f carbona\n", entry.getKey(), entry.getValue());
+        return totalConsumption;
+    }
+
+    private LocalDate getDateInput(String prompt) {
+        while (true) {
+            try {
+                System.out.print(prompt);
+                String dateStr = scanner.nextLine();
+                return LocalDate.parse(dateStr, dateFormatter);
+            } catch (Exception e) {
+                System.out.println("Invalid date format. Please use dd/MM/yyyy.");
+            }
         }
     }
 }
