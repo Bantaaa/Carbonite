@@ -1,7 +1,8 @@
+package main;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
-import java.time.LocalDate;
 
 public class UserHandle {
     private final Map<String, User> users;
@@ -51,8 +52,6 @@ public class UserHandle {
         String name = user.getName();
         int age = user.getAge();
 
-//        ZWA9 RAH GHA DIAL CHAT GPT 3TITLIH LCODE GTLIH ZW9LYA
-
         String horizontalLine = "+" + "-".repeat(CARD_WIDTH - 2) + "+";
         String emptyLine = "|" + " ".repeat(CARD_WIDTH - 2) + "|";
 
@@ -65,17 +64,6 @@ public class UserHandle {
         System.out.printf("| ID:   %-" + (CARD_WIDTH - 9) + "s |\n", id);
         System.out.println(emptyLine);
         System.out.println(horizontalLine);
-    }
-
-    public void addConsumption(String id, LocalDate startDate, LocalDate endDate, float carbon) {
-        User user = users.get(id);
-        if (user == null) {
-            System.out.println("User not found.");
-            return;
-        }
-        Consumption newConsumption = new Consumption(startDate, endDate, carbon, user);
-        user.addConsumption(newConsumption);
-        System.out.println("Consumption added successfully.");
     }
 
     public void displayUserConsumption(String id) {

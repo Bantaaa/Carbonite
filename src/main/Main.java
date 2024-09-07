@@ -1,8 +1,11 @@
+package main;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Scanner;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.InputMismatchException;
+import static main.Util.UserRelatedUtil.*;
+import static main.Util.DateRelatedUtil.getDateInput;
 
 public class Main {
 
@@ -10,11 +13,14 @@ public class Main {
     private static final UserHandle userHandle = new UserHandle();
     private static final ConsumptionHandle consumptionHandle = new ConsumptionHandle(userHandle);
 
-
     public static void main(String[] args) {
+        if (!connectToDatabase()) {
+            return;
+        }
+
         while (true) {
             displayMenu();
-            int choice = getValidChoice();
+            int choice = getValidChoice(scanner);
 
             switch (choice) {
                 case 1:
@@ -24,7 +30,7 @@ public class Main {
                     modifyUser();
                     break;
                 case 3:
-                    showCarbonConsumption();
+                    System.out.println("Feature not implemented yet.");
                     break;
                 case 4:
                     addConsumption();
@@ -47,7 +53,27 @@ public class Main {
                     return;
                 default:
                     System.out.println("Invalid choice. Please try again.");
+                    break;
             }
+        }
+    }
+
+    private static boolean connectToDatabase() {
+        String url = "jdbc:postgresql://localhost:5432/green_pulse";
+        String user = "GreenPulse";
+        String password = "";
+
+        try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            if (connection != null) {
+                System.out.println("Connected to the PostgreSQL server successfully.");
+                return true;
+            } else {
+                System.out.println("Failed to make connection!");
+                return false;
+            }
+        } catch (SQLException e) {
+            System.out.println("Connection failed: " + e.getMessage());
+            return false;
         }
     }
 
@@ -69,31 +95,16 @@ public class Main {
         System.out.println("      5. Delete a user");
         System.out.println("      6. Show stats");
         System.out.println("      7. Display user card");
-        System.out.println("      0. Exit");
-        System.out.println("      7. Display user card");
         System.out.println("      8. Generate consumption report");
         System.out.println("      0. Exit");
         System.out.println("===================================================================");
     }
 
-    private static int getValidChoice() {
-        while (true) {
-            System.out.print("Enter your choice: ");
-            try {
-                return scanner.nextInt();
-            } catch (InputMismatchException e) {
-                System.out.println("Invalid input. Please enter a number.");
-                scanner.nextLine(); // Clear the invalid input
-            }
-        }
-    }
-
     private static void addNewUser() {
-        scanner.nextLine();
         System.out.print("Enter name: ");
         String name = scanner.nextLine();
-        int age = getValidAge();
-        String id = getUniqueUserId();
+        int age = getValidAge(scanner);
+        String id = getUniqueUserId(scanner, userHandle);
         if (userHandle.createUser(name, age, id)) {
             System.out.println("User added successfully. User ID: " + id);
             userHandle.displayUserCard(id);
@@ -103,13 +114,12 @@ public class Main {
     }
 
     private static void modifyUser() {
-        scanner.nextLine();
         System.out.print("Enter user ID: ");
         String id = scanner.nextLine();
         if (userHandle.userExists(id)) {
             System.out.print("Enter new name: ");
             String name = scanner.nextLine();
-            int age = getValidAge();
+            int age = getValidAge(scanner);
             if (userHandle.updateUser(id, name, age)) {
                 System.out.println("User updated successfully.");
                 userHandle.displayUserCard(id);
@@ -121,16 +131,11 @@ public class Main {
         }
     }
 
-    private static void showCarbonConsumption() {
-        consumptionHandle.displayUserConsumptions();
-    }
-
     private static void addConsumption() {
-        consumptionHandle.manageConsumption();
+        consumptionHandle.manageConsumption(scanner);
     }
 
     private static void deleteUser() {
-        scanner.nextLine();
         System.out.print("Enter user ID: ");
         String id = scanner.nextLine();
         if (userHandle.deleteUser(id)) {
@@ -145,43 +150,12 @@ public class Main {
     }
 
     private static void displayUserCard() {
-        scanner.nextLine(); // Consume newline
         System.out.print("Enter user ID: ");
         String id = scanner.nextLine();
         userHandle.displayUserCard(id);
     }
 
-    private static int getValidAge() {
-        while (true) {
-            System.out.print("Enter age: ");
-            try {
-                int age = scanner.nextInt();
-                if (age < 0 || age > 150) {
-                    System.out.println("Invalid age. Please enter a number between 0 and 150.");
-                } else {
-                    return age;
-                }
-            } catch (InputMismatchException e) {
-                System.out.println("Invalid input. Please enter a number.");
-                scanner.nextLine(); // Clear input
-            }
-        }
-    }
-
-    private static String getUniqueUserId() {
-        scanner.nextLine();
-        String id;
-        do {
-            System.out.print("Enter user ID: ");
-            id = scanner.nextLine();
-            if (userHandle.userExists(id)) {
-                System.out.println("This ID already exists. Please choose a different one.");
-            }
-        } while (userHandle.userExists(id));
-        return id;
-    }
-
     private static void generateReport() {
-        consumptionHandle.generateReport();
+        consumptionHandle.generateReport(scanner);
     }
 }
